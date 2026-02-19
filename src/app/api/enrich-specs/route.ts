@@ -157,7 +157,8 @@ export async function POST(req: NextRequest) {
         })),
       })
 
-      const tech = analyzeTechFeatures(spec)
+      const techRaw = analyzeTechFeatures(spec)
+      const { highlights: _h, ...tech } = techRaw
       await prisma.techFeatureFlag.upsert({
         where: { productId: product.id },
         update: tech,

@@ -1,10 +1,4 @@
-feat: LLM 스펙 추론 + 수집 범위 대폭 확대
+fix: TechFeatureFlag에 highlights 필드 제외
 
-- 검색 쿼리 55개로 확대 (브랜드별+용도별+가격대별)
-- 수집 시 카탈로그 100개씩 가져오도록 변경
-- LLM(Gemini/Groq)으로 모델명 기반 상세 스펙 자동 추론
-  - 해상도, 무게, 배터리, 포트, Wi-Fi 등 크롤링 없이 채움
-  - 이름 파싱 결과와 LLM 결과 병합 (LLM 우선)
-  - DB 캐시로 중복 호출 방지
-- /api/enrich-specs 엔드포인트 추가 (부실 데이터 보강용)
-- GitHub Actions에 스펙 보강 단계 추가
+- analyzeTechFeatures 반환값에서 highlights 배열 분리
+- Prisma 스키마에 없는 필드가 upsert에 포함되던 버그 수정
