@@ -100,12 +100,14 @@ export default function ProductCard({ product, showScores = true, highlighted }:
           {/* 핵심 스펙 */}
           {specs && (
             <div className="flex flex-wrap gap-1 mb-3">
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                {specs.cpu.split(' ').slice(0, 3).join(' ')}
-              </span>
+              {specs.cpu && specs.cpu !== '알 수 없음' && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  {specs.cpu.split(' ').slice(0, 3).join(' ')}
+                </span>
+              )}
               {specs.gpu && (
                 <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">
-                  {specs.gpu.replace('NVIDIA ', '')}
+                  {specs.gpu.replace('NVIDIA ', '').split(' ').slice(0, 3).join(' ')}
                 </span>
               )}
               <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">
@@ -114,6 +116,11 @@ export default function ProductCard({ product, showScores = true, highlighted }:
               <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">
                 SSD {specs.ssdGb >= 1024 ? `${specs.ssdGb / 1024}TB` : `${specs.ssdGb}GB`}
               </span>
+              {specs.screenSize && (
+                <span className="text-xs bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded-full">
+                  {specs.screenSize}&quot;
+                </span>
+              )}
               {specs.weightKg && (
                 <span className="text-xs bg-orange-50 text-orange-700 px-2 py-0.5 rounded-full">
                   {specs.weightKg}kg

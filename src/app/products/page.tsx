@@ -158,13 +158,32 @@ export default async function ProductsPage({
               </div>
 
               {/* 페이지네이션 */}
-              {total > 20 && (
-                <div className="mt-8 flex justify-center gap-2">
-                  {Array.from({ length: Math.min(Math.ceil(total / 20), 5) }, (_, i) => i + 1).map(
-                    (p) => (
+              {total > 20 && (() => {
+                const totalPages = Math.ceil(total / 20)
+                const maxVisible = 7
+                let startPage = Math.max(1, page - Math.floor(maxVisible / 2))
+                const endPage = Math.min(totalPages, startPage + maxVisible - 1)
+                if (endPage - startPage < maxVisible - 1) {
+                  startPage = Math.max(1, endPage - maxVisible + 1)
+                }
+                const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i)
+                const buildUrl = (p: number) => `/products?${new URLSearchParams({ ...params, page: String(p) })}`
+
+                return (
+                  <div className="mt-8 flex justify-center items-center gap-1.5">
+                    {page > 1 && (
+                      <a href={buildUrl(page - 1)} className="w-9 h-9 flex items-center justify-center rounded-lg text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">&lt;</a>
+                    )}
+                    {startPage > 1 && (
+                      <>
+                        <a href={buildUrl(1)} className="w-9 h-9 flex items-center justify-center rounded-lg text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">1</a>
+                        {startPage > 2 && <span className="px-1 text-gray-400">…</span>}
+                      </>
+                    )}
+                    {pages.map((p) => (
                       <a
                         key={p}
-                        href={`/products?${new URLSearchParams({ ...params, page: String(p) })}`}
+                        href={buildUrl(p)}
                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${
                           p === page
                             ? 'bg-blue-600 text-white'
@@ -173,10 +192,19 @@ export default async function ProductsPage({
                       >
                         {p}
                       </a>
-                    ),
-                  )}
-                </div>
-              )}
+                    ))}
+                    {endPage < totalPages && (
+                      <>
+                        {endPage < totalPages - 1 && <span className="px-1 text-gray-400">…</span>}
+                        <a href={buildUrl(totalPages)} className="w-9 h-9 flex items-center justify-center rounded-lg text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">{totalPages}</a>
+                      </>
+                    )}
+                    {page < totalPages && (
+                      <a href={buildUrl(page + 1)} className="w-9 h-9 flex items-center justify-center rounded-lg text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50">&gt;</a>
+                    )}
+                  </div>
+                )
+              })()}
             </>
           )}
         </div>
