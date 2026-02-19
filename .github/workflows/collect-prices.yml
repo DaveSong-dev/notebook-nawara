@@ -59,3 +59,12 @@ jobs:
             sleep 2
           done
           echo "전체 브랜드 수집 완료!"
+
+      - name: LLM 스펙 보강 (부실 데이터 채우기)
+        if: github.event_name == 'schedule'
+        run: |
+          echo "스펙 보강 시작 (최대 20개)..."
+          curl -s -X POST "${{ env.APP_URL }}/api/enrich-specs?limit=20" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json"
+          echo "스펙 보강 완료!"

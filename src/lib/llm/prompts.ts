@@ -111,6 +111,44 @@ ${productInfos}
 }`
 }
 
+export function buildSpecEnrichPrompt(productName: string, brand: string): string {
+  return `당신은 노트북 하드웨어 전문가입니다. 아래 노트북의 **공식 사양**을 정확하게 알려주세요.
+
+제품명: ${productName}
+브랜드: ${brand}
+
+반드시 JSON 형식으로만 응답하세요. 모르는 항목은 null로 적어주세요.
+추측하지 말고, 공식 스펙시트 기준으로만 답해주세요.
+
+{
+  "cpu": "CPU 정확한 모델명 (예: Apple M3, Intel Core i7-13700H, AMD Ryzen 7 7840HS)",
+  "cpuGen": "CPU 세대 (예: 13th Gen, Zen 4, M3)",
+  "gpu": "GPU 모델명 (내장이면 null, 예: NVIDIA GeForce RTX 4060 Laptop)",
+  "gpuVram": GPU VRAM GB 숫자 (예: 8, 내장이면 null),
+  "ramGb": RAM 용량 GB 숫자 (예: 16),
+  "ramType": "RAM 규격 (예: DDR5, LPDDR5X, LPDDR5)",
+  "ssdGb": SSD 용량 GB 숫자 (예: 512, 1TB면 1024),
+  "screenSize": 화면 크기 인치 숫자 (예: 14.2, 15.6, 16),
+  "resolution": "해상도 (예: 2560x1600, 1920x1080, 2880x1864)",
+  "refreshRate": 주사율 Hz 숫자 (예: 60, 120, 165),
+  "panelType": "패널 종류 (예: IPS, OLED, Mini-LED, VA)",
+  "brightness": 밝기 nit 숫자 (예: 300, 500, 1000, 모르면 null),
+  "colorGamut": "색재현율 (예: 100% sRGB, 100% DCI-P3, 모르면 null)",
+  "weightKg": 무게 kg 숫자 (예: 1.24, 1.55, 2.1),
+  "batteryWh": 배터리 Wh 숫자 (예: 66.5, 72, 100, 모르면 null),
+  "usbCCount": USB-C 포트 개수 숫자 (예: 2),
+  "thunderbolt": 썬더볼트 지원 여부 true/false,
+  "hdmiVersion": "HDMI 버전 (예: 2.1, 2.0, 없으면 null)",
+  "sdCard": SD카드 슬롯 여부 true/false,
+  "lanPort": 유선 LAN 포트 여부 true/false,
+  "audioJack": 이어폰 잭 여부 true/false,
+  "wifiVersion": "Wi-Fi 버전 (예: Wi-Fi 6, Wi-Fi 6E, Wi-Fi 7)",
+  "btVersion": "블루투스 버전 (예: 5.3, 5.2, 5.0)",
+  "pcieGen": "PCIe 세대 (예: Gen4, Gen5, 모르면 null)",
+  "hasNpu": NPU 탑재 여부 true/false
+}`
+}
+
 export function buildRecommendPrompt(
   request: { budget?: { min: number; max: number }; usage?: string[]; priority?: string },
   topProducts: Array<{

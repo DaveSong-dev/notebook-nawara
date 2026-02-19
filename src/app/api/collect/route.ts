@@ -5,8 +5,10 @@ import { parseSpec } from '@/lib/spec-parser'
 import { calculateUsageScores, analyzeDisplaySuitability, analyzePortSuitability, analyzeTechFeatures } from '@/lib/analysis/performance'
 import { estimateGameFps } from '@/lib/analysis/game-fps'
 import { analyzePrices } from '@/lib/analysis/price'
-import { cleanExpiredCache } from '@/lib/llm/client'
+import { cleanExpiredCache, generateWithFallback } from '@/lib/llm/client'
+import { buildSpecEnrichPrompt } from '@/lib/llm/prompts'
 import { LAPTOP_SEARCH_QUERIES } from '@/lib/naver-api'
+import type { ParsedSpec } from '@/types/product'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -19,15 +21,18 @@ export async function POST(req: NextRequest) {
 
   const { searchParams } = new URL(req.url)
   const queryParam = searchParams.get('query')
-  const queries = queryParam ? [queryParam] : LAPTOP_SEARCH_QUERIES.slice(0, 3) // 기본: 처음 3개
+  const queries = queryParam ? [queryParam] : LAPTOP_SEARCH_QUERIES
 
   let totalCollected = 0
   let totalUpdated = 0
   const errors: string[] = []
 
-  for (const query of queries) {
+  for (let qi = 0; qi < queries.length; qi++) {
+    const query = queries[qi]
     try {
-      const result = await searchNaverLaptops(query, 1, 20)
+      // API 속도 제한 준수 (쿼리 간 500ms 딜레이)
+      if (qi > 0) await new Promise((r) => setTimeout(r, 500))
+      const result = await searchNaverLaptops(query, 1, 100)
 
       for (const item of result.items) {
         try {
@@ -91,7 +96,51 @@ export async function POST(req: NextRequest) {
           })
 
           if (!existingSpec) {
-            const spec = parseSpec(name)
+            // 1) 이름 기반 기본 파싱
+            const nameParsed = parseSpec(name)
+
+            // 2) LLM으로 상세 스펙 보강
+            let spec: ParsedSpec = nameParsed
+            try {
+              const prompt = buildSpecEnrichPrompt(name, brand)
+              const llmResult = await generateWithFallback(
+                prompt, `spec:${product.id}`, 'spec-enrich', product.id
+              )
+              const llmSpec = JSON.parse(llmResult.text) as Partial<ParsedSpec>
+
+              // LLM 결과가 있으면 이름 파싱보다 우선 사용
+              spec = {
+                cpu: llmSpec.cpu || nameParsed.cpu,
+                cpuGen: llmSpec.cpuGen || nameParsed.cpuGen,
+                gpu: llmSpec.gpu || nameParsed.gpu,
+                gpuVram: llmSpec.gpuVram ?? nameParsed.gpuVram,
+                gpuTier: nameParsed.gpuTier,
+                ramGb: llmSpec.ramGb || nameParsed.ramGb,
+                ramType: llmSpec.ramType || nameParsed.ramType,
+                ssdGb: llmSpec.ssdGb || nameParsed.ssdGb,
+                screenSize: llmSpec.screenSize ?? nameParsed.screenSize,
+                resolution: llmSpec.resolution || nameParsed.resolution,
+                refreshRate: llmSpec.refreshRate ?? nameParsed.refreshRate,
+                panelType: llmSpec.panelType || nameParsed.panelType,
+                brightness: llmSpec.brightness ?? nameParsed.brightness,
+                colorGamut: llmSpec.colorGamut || nameParsed.colorGamut,
+                weightKg: llmSpec.weightKg ?? nameParsed.weightKg,
+                batteryWh: llmSpec.batteryWh ?? nameParsed.batteryWh,
+                usbCCount: llmSpec.usbCCount ?? nameParsed.usbCCount,
+                thunderbolt: llmSpec.thunderbolt ?? nameParsed.thunderbolt,
+                hdmiVersion: llmSpec.hdmiVersion || nameParsed.hdmiVersion,
+                sdCard: llmSpec.sdCard ?? nameParsed.sdCard,
+                lanPort: llmSpec.lanPort ?? nameParsed.lanPort,
+                audioJack: llmSpec.audioJack ?? nameParsed.audioJack,
+                wifiVersion: llmSpec.wifiVersion || nameParsed.wifiVersion,
+                btVersion: llmSpec.btVersion || nameParsed.btVersion,
+                pcieGen: llmSpec.pcieGen || nameParsed.pcieGen,
+                hasNpu: llmSpec.hasNpu ?? nameParsed.hasNpu,
+              }
+            } catch {
+              // LLM 실패 시 이름 파싱만 사용
+            }
+
             await prisma.productSpec.create({
               data: {
                 productId: product.id,
