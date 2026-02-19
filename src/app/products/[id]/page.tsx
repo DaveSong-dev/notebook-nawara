@@ -330,7 +330,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
-              { label: 'CPU', value: specs.cpu },
+              { label: 'CPU', value: specs.cpu === '알 수 없음' ? '확인 중' : specs.cpu },
               { label: 'GPU', value: specs.gpu || '내장 그래픽' },
               { label: 'RAM', value: `${specs.ramGb}GB${specs.ramType ? ` ${specs.ramType}` : ''}` },
               { label: 'SSD', value: `${specs.ssdGb >= 1024 ? `${specs.ssdGb / 1024}TB` : `${specs.ssdGb}GB`}` },
@@ -338,10 +338,13 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               { label: '해상도', value: specs.resolution || '-' },
               { label: '주사율', value: specs.refreshRate ? `${specs.refreshRate}Hz` : '-' },
               { label: '패널', value: specs.panelType || '-' },
+              { label: '밝기', value: specs.brightness ? `${specs.brightness}nit` : '-' },
+              { label: '색재현', value: specs.colorGamut || '-' },
               { label: '무게', value: specs.weightKg ? `${specs.weightKg}kg` : '-' },
               { label: '배터리', value: specs.batteryWh ? `${specs.batteryWh}Wh` : '-' },
               { label: 'Wi-Fi', value: specs.wifiVersion || '-' },
               { label: 'Bluetooth', value: specs.btVersion ? `BT ${specs.btVersion}` : '-' },
+              { label: 'PCIe', value: specs.pcieGen || '-' },
             ].map((item) => (
               <div key={item.label} className="bg-gray-50 rounded-xl p-3">
                 <p className="text-xs text-gray-500 mb-0.5">{item.label}</p>

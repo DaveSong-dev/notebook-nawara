@@ -1,0 +1,5 @@
+enhance: product detail page spec display improvements
+
+- Show brightness, color gamut, PCIe gen in detail specs
+- Replace CPU unknown text with friendly message
+- Add 3 extra spec fields for completeness
