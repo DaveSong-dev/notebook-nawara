@@ -47,9 +47,10 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-600">
+        <div className="border-t border-gray-800 mt-8 pt-6 space-y-2 text-xs text-gray-600">
           <p>© 2026 노트북 나와라. 가격 정보는 네이버쇼핑 API 기준입니다.</p>
-          <p>가격은 실시간으로 변동될 수 있습니다.</p>
+          <p>스펙 정보는 AI가 모델명 기반으로 추정한 값이며, 실제 제품과 다를 수 있습니다. 정확한 사양은 제조사 공식 사이트를 확인하세요.</p>
+          <p>가격은 실시간으로 변동될 수 있으며, 가격 급락 시 잘못된 상품이 연동되었을 가능성이 있으니 주의하세요.</p>
         </div>
       </div>
     </footer>

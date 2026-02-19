@@ -324,7 +324,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       {/* 스펙 상세 (전문가 모드) */}
       {specs && (
         <section className="bg-white rounded-2xl border border-gray-200 p-5 mb-6 expert-only">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">🔧 상세 스펙</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">🔧 상세 스펙</h2>
+          <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+            ℹ️ 스펙 정보는 AI가 모델명을 기반으로 추정한 값이며, 실제 제품과 다를 수 있습니다. 정확한 사양은 제조사 공식 사이트를 확인하세요.
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {[
               { label: 'CPU', value: specs.cpu },
@@ -352,7 +355,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       {/* 포트 분석 */}
       {portSuitability && (
         <section className="bg-white rounded-2xl border border-gray-200 p-5 mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">🔌 포트 & 연결성</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">🔌 포트 & 연결성</h2>
+          <p className="text-xs text-gray-400 mb-3">ℹ️ AI 추정 기반 정보입니다. 실제와 다를 수 있습니다.</p>
           <p className="text-sm text-gray-700 mb-3">{portSuitability.summary}</p>
           <div className="flex flex-wrap gap-2">
             {portSuitability.details.map((d, i) => (

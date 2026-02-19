@@ -1,4 +1,5 @@
-fix: TechFeatureFlag에 highlights 필드 제외
+feat: AI 추정 스펙 안내 문구 추가
 
-- analyzeTechFeatures 반환값에서 highlights 배열 분리
-- Prisma 스키마에 없는 필드가 upsert에 포함되던 버그 수정
+- 상세 스펙 섹션에 "AI 추정값" 안내 표시
+- 포트 분석 섹션에 안내 문구 추가
+- Footer에 스펙 AI 추정 + 가격 급락 주의 안내 추가
