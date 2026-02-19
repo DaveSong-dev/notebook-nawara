@@ -1,0 +1,8 @@
+feat: 노트북 나와라 플랫폼 초기 구현
+
+- 네이버 쇼핑 API 기반 노트북 가격비교 플랫폼
+- Prisma + Supabase PostgreSQL DB 연동
+- 가격/성능/게임FPS/디스플레이/포트 분석 엔진
+- Gemini + Groq 멀티 폴백 LLM 추천 시스템
+- 초보자/전문가 모드 분리 UI
+- GitHub Actions 일일 데이터 수집 크론잡

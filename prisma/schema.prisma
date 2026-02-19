@@ -1,0 +1,231 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  naverId     String    @unique
+  name        String
+  brand       String
+  imageUrl    String?
+  releaseDate DateTime?
+  mallUrl     String
+  category    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  specs         ProductSpec?
+  prices        PriceHistory[]
+  priceStats    PriceStatistics?
+  analysis      ProductAnalysis?
+  gameEstimates GamePerformance[]
+  techFeatures  TechFeatureFlag?
+  displayInfo   DisplayAnalysis?
+  portInfo      PortAnalysis?
+  llmCache      LlmCache[]
+
+  @@index([brand])
+  @@index([createdAt])
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // CPU
+  cpu    String
+  cpuGen String?
+  cpuTdp Int?
+
+  // GPU
+  gpu      String?
+  gpuVram  Int?
+  gpuTier  Int?    // 1-10 내부 성능 티어
+
+  // 메모리
+  ramGb   Int
+  ramType String? // DDR4, DDR5
+
+  // 저장장치
+  ssdGb Int
+
+  // 디스플레이
+  screenSize  Float?
+  resolution  String?
+  refreshRate Int?
+  panelType   String? // IPS, OLED, VA, TN
+  brightness  Int?    // nits
+  colorGamut  String? // sRGB 100%, DCI-P3 90% 등
+
+  // 물리
+  weightKg  Float?
+  batteryWh Float?
+  widthMm   Float?
+  depthMm   Float?
+  heightMm  Float?
+
+  // 포트
+  usbACount   Int?
+  usbCCount   Int?
+  thunderbolt Boolean @default(false)
+  hdmiVersion String?
+  sdCard      Boolean @default(false)
+  lanPort     Boolean @default(false)
+  audioJack   Boolean @default(true)
+
+  // 무선
+  wifiVersion String?
+  btVersion   String?
+
+  // 최신 기술
+  pcieGen String?
+  hasNpu  Boolean @default(false)
+  hasFace Boolean @default(false) // 안면인식
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price     Int
+  mallName  String?
+  date      DateTime @default(now())
+
+  @@index([productId, date])
+  @@index([date])
+}
+
+model PriceStatistics {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  currentLowest  Int
+  avg7d          Float?
+  avg30d         Float?
+  avg90d         Float?
+  allTimeMin     Int?
+  allTimeMax     Int?
+  allTimeAvg     Float?
+  priceDropFlag  Boolean @default(false)
+  dropPercent    Float?
+  priceTrend     String? // "rising", "falling", "stable"
+  valueScore     Int     @default(50) // 0-100 가성비 점수
+  valueTier      String  @default("mid") // "high", "mid", "low"
+  lastPriceDelta Float?  // 전일 대비 변화율
+
+  updatedAt DateTime @updatedAt
+}
+
+model ProductAnalysis {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // 용도별 점수 (0-100)
+  scoreGaming    Int @default(0)
+  scoreWork      Int @default(0)
+  scoreStudent   Int @default(0)
+  scoreVideo     Int @default(0)
+  scorePortable  Int @default(0)
+  scoreOverall   Int @default(0)
+
+  // 출시 관련
+  monthsSinceRelease Int?
+  isNew              Boolean @default(false) // 6개월 이내
+  isOld              Boolean @default(false) // 2년 초과
+
+  // 구매 판단
+  shouldBuy       Boolean?
+  shouldBuyReason String?
+
+  updatedAt DateTime @updatedAt
+}
+
+model GamePerformance {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  gameName    String
+  gameSlug    String // "lol", "valorant", etc.
+  fpsLow      Int
+  fpsMid      Int
+  fpsHigh     Int
+  playability String // "excellent", "good", "fair", "poor"
+  summary     String
+
+  @@unique([productId, gameSlug])
+  @@index([productId])
+}
+
+model TechFeatureFlag {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  wifi6     Boolean @default(false)
+  wifi6e    Boolean @default(false)
+  wifi7     Boolean @default(false)
+  bt5       Boolean @default(false)
+  bt53      Boolean @default(false)
+  pcieGen4  Boolean @default(false)
+  pcieGen5  Boolean @default(false)
+  ddr5      Boolean @default(false)
+  npu       Boolean @default(false)
+  aiAccel   Boolean @default(false)
+  oled      Boolean @default(false)
+  mini_led  Boolean @default(false)
+  thunderbolt4 Boolean @default(false)
+  usb4      Boolean @default(false)
+}
+
+model DisplayAnalysis {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  suitableDoc     Boolean @default(false) // 문서 작업
+  suitableMedia   Boolean @default(false) // 영상 감상
+  suitableGame    Boolean @default(false) // 게임
+  suitableDesign  Boolean @default(false) // 디자인/사진 편집
+  summary         String?
+}
+
+model PortAnalysis {
+  id        String  @id @default(cuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  canDualMonitor  Boolean @default(false)
+  canExternalGpu  Boolean @default(false)
+  portScore       Int     @default(50) // 0-100
+  summary         String?
+}
+
+model LlmCache {
+  id        String   @id @default(cuid())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cacheKey  String   @unique
+  provider  String   // "gemini-flash", "gemini-lite", "groq-llama", "template"
+  response  String   @db.Text
+  parsedJson Json?
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([cacheKey])
+  @@index([expiresAt])
+  @@index([productId])
+}

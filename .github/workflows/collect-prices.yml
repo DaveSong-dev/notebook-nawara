@@ -1,0 +1,56 @@
+name: 노트북 가격 수집
+
+on:
+  schedule:
+    # 매일 오전 6시 (KST = UTC+9, 즉 UTC 21:00 전날)
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+    inputs:
+      query:
+        description: '수집할 검색어 (비어있으면 전체)'
+        required: false
+        default: ''
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 가격 수집 API 호출
+        run: |
+          QUERY="${{ github.event.inputs.query }}"
+          if [ -n "$QUERY" ]; then
+            URL="${{ secrets.APP_URL }}/api/collect?query=$QUERY"
+          else
+            URL="${{ secrets.APP_URL }}/api/collect"
+          fi
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$URL" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "응답 코드: $HTTP_CODE"
+          echo "응답 내용: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "오류: HTTP $HTTP_CODE"
+            exit 1
+          fi
+          
+          echo "수집 완료!"
+
+      - name: 브랜드별 추가 수집 (주 1회)
+        if: github.event_name == 'schedule'
+        run: |
+          BRANDS=("삼성 갤럭시북" "LG 그램" "ASUS ROG" "레노버 씽크패드" "HP 오멘" "MSI 게이밍")
+          
+          for BRAND in "${BRANDS[@]}"; do
+            curl -s -X POST "${{ secrets.APP_URL }}/api/collect?query=$BRAND" \
+              -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+              -H "Content-Type: application/json"
+            sleep 2
+          done
