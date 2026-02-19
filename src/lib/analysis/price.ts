@@ -51,6 +51,11 @@ export function analyzePrices(history: PriceRecord[], currentLowest: number): Pr
   // 한 줄 요약
   const summary = buildPriceSummary(vsAvg30dPercent, priceDropDetected, priceTrend, allTimeMin, currentLowest)
 
+  // 가격 이상 감지
+  const { priceAnomalyWarning, priceAnomalyLevel } = detectPriceAnomaly(
+    currentLowest, avg7d, avg30d, allTimeAvg, dropPercent
+  )
+
   return {
     currentLowest,
     avg7d,
@@ -66,7 +71,47 @@ export function analyzePrices(history: PriceRecord[], currentLowest: number): Pr
     valueTier,
     summary,
     vsAvg30dPercent,
+    priceAnomalyWarning,
+    priceAnomalyLevel,
   }
+}
+
+function detectPriceAnomaly(
+  current: number,
+  avg7d: number | null,
+  avg30d: number | null,
+  allTimeAvg: number | null,
+  dropPercent: number | null,
+): { priceAnomalyWarning: string | null; priceAnomalyLevel: 'none' | 'caution' | 'danger' } {
+  const refPrice = avg30d ?? avg7d ?? allTimeAvg
+
+  if (!refPrice || !dropPercent) {
+    return { priceAnomalyWarning: null, priceAnomalyLevel: 'none' }
+  }
+
+  // 20% 이상 급락 → 위험 (잘못 연동 가능성 높음)
+  if (dropPercent >= 20) {
+    return {
+      priceAnomalyLevel: 'danger',
+      priceAnomalyWarning:
+        `가격이 평균 대비 ${Math.round(dropPercent)}% 급락했습니다. ` +
+        '이 경우 행사가로 저렴해졌거나, 병행수입 제품이 잘못 연동되어 가격이 저렴하거나, ' +
+        '완전히 다른 제품이 연동되었을 수 있으니 구매 전 반드시 확인하세요.',
+    }
+  }
+
+  // 10~20% 급락 → 주의
+  if (dropPercent >= 10) {
+    return {
+      priceAnomalyLevel: 'caution',
+      priceAnomalyWarning:
+        `가격이 평균 대비 ${Math.round(dropPercent)}% 하락했습니다. ` +
+        '행사 할인일 수 있지만, 병행수입 제품이나 다른 제품이 잘못 연동된 경우도 있으니 ' +
+        '판매처와 상품 정보를 꼭 확인하세요.',
+    }
+  }
+
+  return { priceAnomalyWarning: null, priceAnomalyLevel: 'none' }
 }
 
 function calculateValueScore(

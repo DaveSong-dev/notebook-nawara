@@ -2,14 +2,17 @@ name: 노트북 가격 수집
 
 on:
   schedule:
-    # 매일 오전 6시 (KST = UTC+9, 즉 UTC 21:00 전날)
-    - cron: '0 21 * * *'
+    - cron: '0 0 * * *'   # 매일 오전 9시 KST (UTC 0시)
+    - cron: '0 12 * * *'  # 매일 오후 9시 KST (UTC 12시) - 가격 변동 체크
   workflow_dispatch:
     inputs:
       query:
         description: '수집할 검색어 (비어있으면 전체)'
         required: false
         default: ''
+
+env:
+  APP_URL: https://notebook-nawara.vercel.app
 
 jobs:
   collect:
@@ -21,9 +24,9 @@ jobs:
         run: |
           QUERY="${{ github.event.inputs.query }}"
           if [ -n "$QUERY" ]; then
-            URL="${{ secrets.APP_URL }}/api/collect?query=$QUERY"
+            URL="${{ env.APP_URL }}/api/collect?query=$QUERY"
           else
-            URL="${{ secrets.APP_URL }}/api/collect"
+            URL="${{ env.APP_URL }}/api/collect"
           fi
           
           RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$URL" \
@@ -43,14 +46,16 @@ jobs:
           
           echo "수집 완료!"
 
-      - name: 브랜드별 추가 수집 (주 1회)
+      - name: 브랜드별 추가 수집
         if: github.event_name == 'schedule'
         run: |
-          BRANDS=("삼성 갤럭시북" "LG 그램" "ASUS ROG" "레노버 씽크패드" "HP 오멘" "MSI 게이밍")
+          BRANDS=("삼성 갤럭시북" "LG 그램" "애플 맥북" "ASUS ROG" "ASUS 젠북" "레노버 씽크패드" "레노버 리전" "델 XPS" "HP 엔비" "HP 오멘" "MSI 게이밍" "에이서 스위프트" "한성컴퓨터")
           
           for BRAND in "${BRANDS[@]}"; do
-            curl -s -X POST "${{ secrets.APP_URL }}/api/collect?query=$BRAND" \
+            echo "수집 중: $BRAND"
+            curl -s -X POST "${{ env.APP_URL }}/api/collect?query=$BRAND" \
               -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
               -H "Content-Type: application/json"
             sleep 2
           done
+          echo "전체 브랜드 수집 완료!"

@@ -31,20 +31,24 @@ export async function POST(req: NextRequest) {
 
       for (const item of result.items) {
         try {
+          // 카탈로그(가격비교) 상품만 수집 - 개별 판매자 상품 제외
+          if (item.productType !== '2') continue
+
           const name = sanitizeProductName(item.title)
           const brand = extractBrand(name, item.maker)
           const price = parseInt(item.lprice) || 0
 
-          if (!price || price < 100000) continue // 가격 없거나 비정상
+          if (!price || price < 100000) continue
 
-          // 제품 생성 또는 업데이트
+          const catalogUrl = `https://search.shopping.naver.com/catalog/${item.productId}`
+
           const product = await prisma.product.upsert({
             where: { naverId: item.productId },
             update: {
               name,
               brand,
               imageUrl: item.image,
-              mallUrl: item.link,
+              mallUrl: catalogUrl,
               updatedAt: new Date(),
             },
             create: {
@@ -52,7 +56,7 @@ export async function POST(req: NextRequest) {
               name,
               brand,
               imageUrl: item.image,
-              mallUrl: item.link,
+              mallUrl: catalogUrl,
               releaseDate: estimateReleaseDate(name) ?? null,
               category: `${item.category2} > ${item.category3}`.trim(),
             },

@@ -68,6 +68,8 @@ export interface PriceAnalysis {
   valueTier: 'high' | 'mid' | 'low'
   summary: string
   vsAvg30dPercent: number | null
+  priceAnomalyWarning: string | null
+  priceAnomalyLevel: 'none' | 'caution' | 'danger'
 }
 
 export interface UsageScores {

@@ -15,6 +15,7 @@ import PriceChart from '@/components/charts/PriceChart'
 import WorkSuitabilityCard from '@/components/product/WorkSuitabilityCard'
 import TechBadges from '@/components/product/TechBadges'
 import ShouldBuyBanner from '@/components/product/ShouldBuyBanner'
+import PriceAnomalyBanner from '@/components/product/PriceAnomalyBanner'
 import type { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -199,6 +200,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             )}
             <p className="text-sm mt-2 text-gray-700">{priceAnalysis.summary}</p>
           </div>
+
+          {/* 가격 이상 경고 */}
+          <PriceAnomalyBanner
+            level={priceAnalysis.priceAnomalyLevel}
+            warning={priceAnalysis.priceAnomalyWarning}
+          />
 
           {/* 구매 판단 */}
           <ShouldBuyBanner productId={id} priceAnalysis={priceAnalysis} monthsSinceRelease={monthsSinceRelease} />

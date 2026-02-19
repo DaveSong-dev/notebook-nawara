@@ -84,7 +84,7 @@ export default function ProductCard({ product, showScores = true, highlighted }:
           {/* 배지 */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {analysis?.isNew && <span className="badge-new">NEW</span>}
-            {priceStats?.priceDropFlag && <span className="badge-hot">🔥 가격 급락</span>}
+            {priceStats?.priceDropFlag && <span className="badge-hot">🚨 가격 급락 주의</span>}
             {analysis?.isOld && <span className="badge-old">구형</span>}
           </div>
         </div>
