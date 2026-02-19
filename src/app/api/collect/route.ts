@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { searchNaverLaptops, sanitizeProductName, extractBrand, estimateReleaseDate } from '@/lib/naver-api'
+import { searchNaverLaptops, searchNaverLaptopsAll, sanitizeProductName, extractBrand, estimateReleaseDate } from '@/lib/naver-api'
 import { parseSpec } from '@/lib/spec-parser'
 import { calculateUsageScores, analyzeDisplaySuitability, analyzePortSuitability, analyzeTechFeatures } from '@/lib/analysis/performance'
 import { estimateGameFps } from '@/lib/analysis/game-fps'
@@ -27,14 +27,23 @@ export async function POST(req: NextRequest) {
   let totalUpdated = 0
   const errors: string[] = []
 
+  const seenNaverIds = new Set<string>()
+
   for (let qi = 0; qi < queries.length; qi++) {
     const query = queries[qi]
     try {
-      // API 속도 제한 준수 (쿼리 간 500ms 딜레이)
-      if (qi > 0) await new Promise((r) => setTimeout(r, 500))
-      const result = await searchNaverLaptops(query, 1, 100)
+      if (qi > 0) await new Promise((r) => setTimeout(r, 300))
 
-      for (const item of result.items) {
+      // 페이지네이션으로 최대 3페이지(300개) 수집, 정렬 순서도 다양화
+      const sort = qi % 3 === 0 ? 'sim' as const : qi % 3 === 1 ? 'date' as const : 'asc' as const
+      const items = queryParam
+        ? (await searchNaverLaptops(query, 1, 100, sort)).items
+        : await searchNaverLaptopsAll(query, 3, sort)
+
+      for (const item of items) {
+        // 이미 이 실행에서 처리한 제품 스킵 (중복 방지)
+        if (seenNaverIds.has(item.productId)) continue
+        seenNaverIds.add(item.productId)
         try {
           // 카탈로그(가격비교) 상품만 수집 - 개별 판매자 상품 제외
           if (item.productType !== '2') continue
@@ -332,6 +341,7 @@ export async function POST(req: NextRequest) {
     success: true,
     collected: totalCollected,
     updated: totalUpdated,
+    uniqueProducts: seenNaverIds.size,
     errors: errors.slice(0, 10),
     queriesRun: queries.length,
   })
